@@ -13,6 +13,7 @@ U-Net之訓練資料集(NTUH)由臺大醫院協助提供
 執行 train.py，訓練完的模型參數會命名為 unet.pth 儲存在 ./result/
 
 # 圖像切割 執行步驟
+![image](images/Untitled_Artwork.png)
 # step 1.
 先將待處理圖片改名為 input.png 放在 ./input/ 資料夾內 (影像尺寸應大於1024x800)
 # step 2.
