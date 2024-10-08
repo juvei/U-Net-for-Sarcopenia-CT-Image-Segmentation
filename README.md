@@ -1,5 +1,5 @@
 # step 1.
-先將待處理圖片改名為 input.png 放在 input 資料夾內
+先將待處理圖片改名為 input.png 放在 input 資料夾內 (影像尺寸應大於1024x800)
 
 # step 2.
 執行 pre_process.py，結果會自動命名為 input.png 存放於 testing_set 資料夾中
