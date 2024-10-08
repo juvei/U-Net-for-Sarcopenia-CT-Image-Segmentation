@@ -1,7 +1,7 @@
 此專題中的U-Net實作 引用自 qiaofengsheng /pytorch-UNet/ ，Github URL : https://github.com/qiaofengsheng/pytorch-UNet/tree/master
 僅供學術用途，禁止用於違法行為。
 
-訓練資料集
+# 訓練資料集
 # step 1.
 將訓練資料集的原始圖檔放在 ./data/JPEGImages/
 # step 2.
@@ -9,7 +9,7 @@
 # step 3.
 執行 train.py，訓練完的模型參數會命名為 unet.pth 儲存在 ./result/
 
-圖像切割 執行步驟
+# 圖像切割 執行步驟
 # step 1.
 先將待處理圖片改名為 input.png 放在 ./input/ 資料夾內 (影像尺寸應大於1024x800)
 # step 2.
