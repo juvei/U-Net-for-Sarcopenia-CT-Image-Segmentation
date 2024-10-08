@@ -1,4 +1,4 @@
-此專題中的U-Net實作 引用自 qiaofengsheng /pytorch-UNet/ ，Github URL : https://github.com/qiaofengsheng/pytorch-UNet/tree/master
+此專題中的U-Net實作部分引用自 qiaofengsheng /pytorch-UNet/ ，Github URL : https://github.com/qiaofengsheng/pytorch-UNet/tree/master
 
 U-Net之訓練資料集由臺大醫院(NTUH)協助提供
 
