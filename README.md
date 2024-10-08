@@ -10,7 +10,7 @@ U-Net之訓練資料集由臺大醫院(NTUH)協助提供
 # step 2.
 將訓練資料集的註記的資料放在 ./data/SegmentationClass/
 # step 3.
-執行 train.py，訓練完的模型參數會命名為 unet.pth 儲存在 ./result/
+執行 train.py，訓練完的模型參數會命名為 unet.pth 儲存在 ./param/
 
 # 圖像切割 執行步驟
 ![image](images/Untitled_Artwork.png)
