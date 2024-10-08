@@ -1,0 +1,127 @@
+import cv2
+import math
+import numpy as np
+import matplotlib.pyplot as plt
+
+def get_good_match(des1, des2):
+    bf = cv2.BFMatcher()
+    matches = bf.knnMatch(des1, des2, k=2)  # des1为模板图，des2为匹配图
+    matches = sorted(matches, key=lambda x: x[0].distance / x[1].distance)
+    good = []
+    for m, n in matches:
+        if m.distance < 0.75 * n.distance:
+            good.append(m)
+    return good
+
+def drawMatches(imageA, imageB, kpsA, kpsB, matches, status):
+    # 初始化可视化图片，将A、B图左右连接到一起
+    (hA, wA) = imageA.shape[:2]
+    (hB, wB) = imageB.shape[:2]
+    vis = np.zeros((max(hA, hB), wA + wB, 3), dtype="uint8")
+    vis[0:hA, 0:wA] = imageA
+    vis[0:hB, wA:] = imageB
+
+    # 联合遍历，画出匹配对
+    for ((trainIdx, queryIdx), s) in zip(matches, status):
+        # 当点对匹配成功时，画到可视化图上
+        if s == 1:
+            # 画出匹配对
+            ptA = (int(kpsA[queryIdx][0]), int(kpsA[queryIdx][1]))
+            ptB = (int(kpsB[trainIdx][0]) + wA, int(kpsB[trainIdx][1]))
+            cv2.line(vis, ptA, ptB, (0, 255, 0), 1)
+
+    # 返回可视化结果
+    return vis
+
+
+# 全景拼接
+def siftimg_rightlignment(img1,kp1,des1,img2,kp2,des2):
+    goodMatch = get_good_match(des1, des2)
+    # 当筛选项的匹配对大于4对时：计算视角变换矩阵
+    if len(goodMatch) > 4:
+        # 获取匹配对的点坐标
+        ptsA = np.float32([kp1[m.queryIdx].pt for m in goodMatch]).reshape(-1, 1, 2)
+        ptsB = np.float32([kp2[m.trainIdx].pt for m in goodMatch]).reshape(-1, 1, 2)
+        ransacReprojThreshold = 4
+        H, status = cv2.findHomography(ptsA, ptsB, cv2.RANSAC, ransacReprojThreshold)
+        #  该函数的作用就是先用RANSAC选择最优的四组配对点，再计算H矩阵。H为3*3矩阵
+
+        # 将图片右进行视角变换，result是变换后图片
+        result = cv2.warpPerspective(img1, H, (img1.shape[1] + img2.shape[1], img2.shape[0]))
+        # 将图片左传入result图片最左端
+        result[0:img2.shape[0], 0:img2.shape[1]] = img2
+        return result
+
+img0 = cv2.imread('./result/result.jpg')
+
+# mask resize
+img00 = cv2.resize(img0,(1024,1024),cv2.INTER_CUBIC)
+
+mask = cv2.resize(img00.copy(),(1024,800))
+for i in range(0,1024):
+    for j in range(0,800):
+        (mask[j,i,0],mask[j,i,1],mask[j,i,2])=(img00[j,i,0],img00[j,i,1],img00[j,i,2])
+
+# mask
+img1 = mask.copy()
+input = cv2.imread('./testing_set/input.png')
+for i in range(0,1024):
+    for j in range(0,800):
+        if mask[j,i,1]>50 and mask[j,i,2]>50:
+            (img1[j,i,0],img1[j,i,1],img1[j,i,2])=(input[j,i,0],input[j,i,1],input[j,i,2])
+        elif i>2 and i<100 and j>50 and j<750:
+            (img1[j,i,0],img1[j,i,1],img1[j,i,2])=(input[j,i,0],input[j,i,1],input[j,i,2])
+        else:
+            (img1[j,i,0],img1[j,i,1],img1[j,i,2])=(0,0,0)
+
+# calculate Area
+# image stitching
+
+# read file
+bg = cv2.imread('./testing_set/bg_1548_58cm2.png')
+bg_mask = cv2.imread('./testing_set/bg_mask.png')
+img2 = img1.copy()
+
+# key point & descriptor
+g1 = cv2.cvtColor(img2,cv2.COLOR_BGR2GRAY)
+g2 = cv2.cvtColor(bg,cv2.COLOR_BGR2GRAY)
+g3 = cv2.cvtColor(bg_mask,cv2.COLOR_BGR2GRAY)
+
+sift = cv2.xfeatures2d.SIFT_create()
+
+kp1,des1 = sift.detectAndCompute(g1,g3)
+kp2,des2 = sift.detectAndCompute(g2,None)
+
+goodMatch = get_good_match(des1, des2)
+all_goodmatch_img= cv2.drawMatches(g1, kp1, g2, kp2, goodMatch, None, flags=2)
+
+# goodmatch_img自己设置前多少个goodMatch[:10]
+goodmatch_img = cv2.drawMatches(g1, kp1, g2, kp2, goodMatch[:10], None, flags=2)
+#cvshow('Keypoint Matches1', all_goodmatch_img)
+#cvshow('Keypoint Matches2', goodmatch_img)
+
+# 把图片拼接成全景图
+result=siftimg_rightlignment(img2,kp1,des1,bg,kp2,des2)
+
+# caluculate area
+result_g = cv2.cvtColor(mask,cv2.COLOR_BGR2GRAY)
+n=0
+for i in range(0,1024):
+    for j in range(0,800):
+        if result_g[j,i]>=50:
+            n = n+1
+area = n*15*20/(380*285)#(345*460)
+print('Area : ',area)
+
+cv2.imwrite('./result/area.jpg',result)
+# Display
+#cv2.imshow('origin',img00)
+cv2.imshow('input',input)
+cv2.imshow('resized mask',mask)
+#cv2.imshow('filter',img1)
+#cv2.imshow('match',all_goodmatch_img)
+# image stitching
+#cv2.imshow('result',result)
+
+
+cv2.waitKey(0)
